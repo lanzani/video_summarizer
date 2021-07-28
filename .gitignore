@@ -496,3 +496,7 @@ cython_debug/
 .idea
 .idea/
 .idea/*
+
+tests
+tests/
+tests/*
