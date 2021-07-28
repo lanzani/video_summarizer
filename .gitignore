@@ -500,3 +500,12 @@ cython_debug/
 tests
 tests/
 tests/*
+
+examples/video_input
+examples/video_output
+
+examples/video_input/
+examples/video_output/
+
+examples/video_input/*
+examples/video_output/*

@@ -6,9 +6,6 @@ THRESHOLD_SENSITIVITY = 30
 
 
 def _difference_area(img1, img2) -> int:
-    # img1 = imutils.resize(img1, width=320)
-    # img2 = imutils.resize(img2, width=320)
-
     try:
         delta_frame = cv2.absdiff(img1, img2)
     except Exception:
@@ -24,6 +21,8 @@ def _difference_area(img1, img2) -> int:
     return sum(cv2.contourArea(contour) for contour in c)
 
 
+# === Movement detection ===============================================================================================
+
 def detect_difference(img1, img2, area_threshold=250) -> bool:
     """Check if there is a difference in the two images.
 
@@ -36,11 +35,31 @@ def detect_difference(img1, img2, area_threshold=250) -> bool:
     return _difference_area(img1, img2) > area_threshold or False
 
 
+def detect_difference_yeld(input_video_path, area_threshold=250) -> bool:
+    raise NotImplementedError
+
+
+def get_difference_area():
+    raise NotImplementedError
+
+
+def get_difference_roi():
+    raise NotImplementedError
+
+
+def get_difference_contours():
+    raise NotImplementedError
+
+
+# === Summarization ====================================================================================================
+
 def summarize(video_input_path, video_output_path, mode, options):
     # todo usare interfaccia cli con progressbar
     pass
 
 
+# === Heat Map =========================================================================================================
+
 def heat_map(video_input_path, video_output_path, mode, options):
     # todo usare interfaccia cli con progressbar
-    pass
+    raise NotImplementedError
