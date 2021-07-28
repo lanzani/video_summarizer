@@ -18,7 +18,7 @@ def something_moves(img, threshold=250):
 
 first_frame = None
 
-input_video_path = "video_input/original.mp4"
+input_video_path = "input_videos/original.mp4"
 
 cap = cv2.VideoCapture(input_video_path)
 

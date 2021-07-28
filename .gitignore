@@ -501,11 +501,11 @@ tests
 tests/
 tests/*
 
-examples/video_input
-examples/video_output
+examples/input_videos
+examples/output_videos
 
-examples/video_input/
-examples/video_output/
+examples/input_videos/
+examples/output_videos/
 
-examples/video_input/*
-examples/video_output/*
+examples/input_videos/*
+examples/output_videos/*
