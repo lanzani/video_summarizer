@@ -1,15 +1,28 @@
+import os
+
 import cv2
 import numpy as np
 from tqdm import tqdm
 
-SUPPORTED_MODE_OPTIONS = {"movement": "Save only frame that contains difference from the previous frame"}
-SUPPORTED_FORMATS = ["mp4"]
+SUPPORTED_MODES_OPTIONS = {
+    0: {"name": "motion", "desc": "Save only frame that contains difference from the previous frame"}
+}
+
+SUPPORTED_FORMATS = ("mp4",)
 
 BLUR_SIZE = 5
 THRESHOLD_SENSITIVITY = 30
 
 
-def _difference_area(img1, img2) -> int:
+def _get_difference_area(img1, img2) -> int:
+    """Get the difference area between two images in pixels.
+
+    Uses cv2.absdiff() between the two images.
+
+    :param img1: First image
+    :param img2: Second image
+    :return: Difference area in pixels
+    """
     try:
         delta_frame = cv2.absdiff(img1, img2)
     except Exception:
@@ -46,7 +59,7 @@ def detect_difference(img1, img2, area_threshold=250) -> bool:
     :return: True if the difference of the images is greater than the threshold, False otherwise.
     """
 
-    return _difference_area(img1, img2) > area_threshold or False
+    return _get_difference_area(img1, img2) > area_threshold or False
 
 
 def detect_difference_yeld(input_video_path, area_threshold=250) -> bool:
@@ -67,16 +80,28 @@ def get_difference_contours():
 
 # === Summarization ====================================================================================================
 
-def summarize(input_video_path, output_video_path, mode, options=None, movement_threshold=250, verbose=True):
-    if mode == "movement":
-        _movement_summarization(input_video_path, output_video_path, movement_threshold, verbose)
+def summarize(input_video_path: str, output_video_path: str, mode: str, options=None, movement_threshold=250,
+              verbose=True):
+    # TODO option parameter to raise exception when outputfile exists
+    if not os.path.exists(input_video_path):
+        raise FileNotFoundError(f"Input file {input_video_path} not found.")
+
+    if not input_video_path.endswith(SUPPORTED_FORMATS):
+        print("[ERROR] Input file format not supported")
+        return
+
+    if not output_video_path.endswith(SUPPORTED_FORMATS):
+        print("[ERROR] Processed file format not supported")
+        return
+
+    if mode == SUPPORTED_MODES_OPTIONS[0]["name"]:
+        _motion_summarization(input_video_path, output_video_path, movement_threshold, verbose)
     else:
-        print(f"[INFO] mode <{mode}> don't exist. "
-              f"Supported mode options: {[mode for mode in SUPPORTED_MODE_OPTIONS.keys()]}")
+        print(f"[INFO] mode [{mode}] don't exist. "
+              f"Supported mode options: {[mode['name'] for mode in SUPPORTED_MODES_OPTIONS.values()]}")
 
 
-def _movement_summarization(input_video_path, output_video_path, movement_threshold, verbose):
-    video_writer = None
+def _motion_summarization(input_video_path: str, output_video_path: str, movement_threshold: int, verbose: bool):
     first_frame = None
     cap = cv2.VideoCapture(input_video_path)
 
@@ -84,12 +109,12 @@ def _movement_summarization(input_video_path, output_video_path, movement_thresh
         print(f"[ERROR] Error opening video file {input_video_path}")
         return None
     else:
-        video_info = _get_video_info(cap)
+        vid_info = _get_video_info(cap)
+        video_writer = cv2.VideoWriter(output_video_path, vid_info["fourcc"], vid_info["fps"], vid_info["size"], True)
 
-        fourcc = 0x7634706d
-        video_writer = cv2.VideoWriter(output_video_path, fourcc, video_info["fps"], video_info["size"], True)
+    print(f"[PROCESSING video '{input_video_path}' to '{output_video_path}']")
+    progress_bar = tqdm(total=vid_info["frame_count"])
 
-    pbar = tqdm(total=video_info["frame_count"])
     while cap.isOpened():
 
         ret, frame = cap.read()
@@ -102,9 +127,9 @@ def _movement_summarization(input_video_path, output_video_path, movement_thresh
         if mov:
             video_writer.write(frame)
 
-        pbar.update(1)
+        progress_bar.update(1)
 
-    pbar.close()
+    progress_bar.close()
     cap.release()
     video_writer.release()
 
@@ -115,14 +140,19 @@ def _movement_summarization(input_video_path, output_video_path, movement_thresh
 # === Heat Map =========================================================================================================
 
 def heat_map(video_input_path, video_output_path, mode, options):
-    # todo usare interfaccia cli con progressbar
     raise NotImplementedError
 
 
 # === Utils ============================================================================================================
 
-def _print_conclusion(input_video_path, output_video_path):
-    print("[COMPLETED]")
+def _print_conclusion(input_video_path: str, output_video_path: str):
+    """Print the results of the operation.
+
+    :param input_video_path: path of the video before processing.
+    :param output_video_path: path of the video after processing.
+    :return:
+    """
+    print("[PROCESS COMPLETED]")
 
     input_video_duration = _get_video_info(cv2.VideoCapture(input_video_path))["duration"]
     output_video_duration = _get_video_info(cv2.VideoCapture(output_video_path))["duration"]
@@ -131,13 +161,30 @@ def _print_conclusion(input_video_path, output_video_path):
     print(f"[INFO] Your output video file is {output_video_duration}")
 
 
-def _get_video_info(video_capture):
+def _get_video_info(video_capture: cv2.VideoCapture):
+    """Get video details.
+
+    Details:
+
+    - frames size (size)
+    - fps (fps)
+    - number of frames (frame_count)
+    - duration (duration)
+    - fourcc codec (fourcc)
+
+    :param video_capture: cv2.VideoCapture object of the video.
+    :return: Details of the VideoCapture video.
+    """
+
+    # todo add hour to duration
+
     fps = video_capture.get(cv2.CAP_PROP_FPS)
     frame_count = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
     size = (int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    fourcc = int(video_capture.get(cv2.CAP_PROP_FOURCC))
 
     duration = frame_count / fps
     minutes = int(duration / 60)
     seconds = int(duration % 60)
 
-    return {"size": size, "fps": fps, "frame_count": frame_count, "duration": f"{minutes}:{seconds}"}
+    return {"size": size, "fps": fps, "frame_count": frame_count, "duration": f"{minutes}'{seconds}\"", "fourcc": fourcc}
