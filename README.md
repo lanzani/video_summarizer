@@ -2,8 +2,11 @@
 
 ---
 
-A time saver tool that transform long footage in a short video keeping the meaningful parts. 
+A time saver tool that transform long footage in a short video, keeping the meaningful parts. 
 Useful to compress video surveillance footage.
+
+> Note: This project started recently, so it is in his initial form. Your suggestions are welcome and feel free to 
+contribute!
 
 ## Installation
 
@@ -14,6 +17,11 @@ Use `pip install video_summarizer`.
 ## Features / Usage
 
 ---
+
+Tested video formats:
+
+- .mp4
+- .mpg
 
 ### Video Summarization
 

@@ -8,7 +8,7 @@ SUPPORTED_MODES_OPTIONS = {
     0: {"name": "motion", "desc": "Save only frame that contains difference from the previous frame"}
 }
 
-SUPPORTED_FORMATS = ("mp4",)
+SUPPORTED_FORMATS = (".mp4", ".mpg")
 
 BLUR_SIZE = 5
 THRESHOLD_SENSITIVITY = 30
@@ -182,9 +182,11 @@ def _get_video_info(video_capture: cv2.VideoCapture):
     frame_count = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
     size = (int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
     fourcc = int(video_capture.get(cv2.CAP_PROP_FOURCC))
-
-    duration = frame_count / fps
-    minutes = int(duration / 60)
-    seconds = int(duration % 60)
+    try:
+        duration = frame_count / fps
+        minutes = int(duration / 60)
+        seconds = int(duration % 60)
+    except ZeroDivisionError:
+        duration, minutes, seconds = 0, 0, 0
 
     return {"size": size, "fps": fps, "frame_count": frame_count, "duration": f"{minutes}'{seconds}\"", "fourcc": fourcc}
